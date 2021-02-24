@@ -1,0 +1,7 @@
+rpi-i2s-audio/modules.order
+rpi-i2s-audio/Module.symvers
+rpi-i2s-audio/my_loader.ko
+rpi-i2s-audio/my_loader.mod
+rpi-i2s-audio/my_loader.mod.c
+rpi-i2s-audio/my_loader.mod.o
+rpi-i2s-audio/my_loader.o

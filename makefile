@@ -16,14 +16,21 @@ dependencias:
 # export PATH := /home/pi/.local/bin:$(PATH)
 
 
-i2s:
 ###    # Activar i2s editando  /boot/config.txt:
 ###    # Uncomment some or all of these to enable the optional hardware interfaces
 ###    dtparam=i2s=on
-	sudo sed 's/#dtparam=i2s=on/dtparam=i2s=on/' /boot/config.txt 
-###    
-###    cd rpi-i2s-audio
-###    make -C /lib/modules/$(uname -r )/build M=$(pwd) modules
+#sudo sed 's/#dtparam=i2s=on/dtparam=i2s=on/' /boot/config.txt 
+
+i2s:
+	sudo cp /boot/config.txt /boot/config-bk.txt
+	sudo cp configs/boot/config.txt /boot/config.txt
+
+VERSION = $(shell uname -r)
+PWD = $(shell pwd)'/rpi-i2s-audio'
+i2s-audio:
+	cd rpi-i2s-audio
+	make -C /lib/modules/$(VERSION)/build M=$(PWD) modules
+
 ###    sudo insmod my_loader.ko
 ###    sudo cp my_loader.ko /lib/modules/$(uname -r)/kernel/drivers/
 ###    
