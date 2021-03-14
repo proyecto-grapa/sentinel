@@ -42,15 +42,15 @@ void blink() {
 	return;
 }
 
-void segundero() {
+void reloj() {
 	mod = dur % 10;
 	if(mod == 0){
 		ticks++;
-		printf("TICK %d: dur: %d mod: %d state: %d\n", ticks, dur, mod, state);
+		// printf("TICK %d: dur: %d mod: %d state: %d\n", ticks, dur, mod, state);
 		if(!blinking)gpioWrite(LED,0);
 	}
 	if(mod == 5){
-		printf("TOCK: dur: %d mod: %d state: %d \n", dur, mod, state);
+		// printf("TOCK: dur: %d mod: %d state: %d \n", dur, mod, state);
 		if(!blinking)gpioWrite(LED,1);
 	}
 	return;
@@ -109,11 +109,11 @@ int main(int argc, char *argv[]) {
 	//}
 
 	state = 0;
-	puts("hola");
+	puts("HOLA");
 	gpioWrite(LED,1);
 	pin = true;
 	module_on = false;
-	gpioWrite(OPTO,0);
+	gpioWrite(OPTO,0); // ¿hay que apagar modulo GSM en el init?
 	
 	/* LOOP */
 	while(1) 
@@ -123,7 +123,7 @@ int main(int argc, char *argv[]) {
 		//	blink();
 		//}
 		if (gpioRead(PULSE)==0) {
-			if(!cambio)segundero();
+			if(!cambio)reloj();
 			if (state==0 && ticks>TICKS_1) {
 				blink();
 				/* check if module started */
@@ -141,7 +141,7 @@ int main(int argc, char *argv[]) {
 					cambio = true;
 					gpioWrite(LED,0);
 					pin = false;
-					//gpioWrite(OPTO,0); // ¿hay que pagar GSM cuando graba?
+					//gpioWrite(OPTO,0); // ¿hay que apagar el modulo GSM al grabar?
 					dur = 0;
 					ticks = 0;
 					blinking = false;
