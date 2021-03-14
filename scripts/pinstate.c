@@ -12,9 +12,9 @@
 #define TICKS_1 5
 #define TICKS_2 7
 
-#define WAIT_1 20
-//#define WAIT_4 100
-//#define WAIT_5 130
+// #define WAIT_1 20
+// #define WAIT_4 100
+// #define WAIT_5 130
 
 
 int state;
@@ -78,7 +78,6 @@ void event(int gpio, int level, uint32_t tick){
 	}
 	
 }
-
 int main(int argc, char *argv[]) {
 	int usecs = 100000;
 	int debounce = 20000;
@@ -97,8 +96,20 @@ int main(int argc, char *argv[]) {
 	gpioSetAlertFunc(PULSE, event);
 	gpioGlitchFilter(PULSE, debounce);	
 
-	/* START */
+	/* SYSTEM ENV VARS */
+	//char *estado;
+        //estado = getenv("ESTADO");	
+	//if (estado == NULL){
+	//	fprintf(stderr, "Error eding ESTADO env. var.\n");
+	//	return 1;
+	//}
+	//if(setenv("ESTADO", "APAGADO", 1)<0){
+	//	fprintf(stderr, "Error setting env. var.\n");
+	//	return 1;
+	//}
+
 	state = 0;
+	puts("hola");
 	gpioWrite(LED,1);
 	pin = true;
 	module_on = false;
@@ -108,26 +119,29 @@ int main(int argc, char *argv[]) {
 	while(1) 
 	{
 	   	usleep(usecs);
-		if (state==2) {
-			blink();
-		}
+		//if (state==2) {
+		//	blink();
+		//}
 		if (gpioRead(PULSE)==0) {
 			if(!cambio)segundero();
 			if (state==0 && ticks>TICKS_1) {
 				blink();
 				/* check if module started */
-				/*or start service module*/
+				/* or start service module */
 				if (!module_on) {
 					gpioWrite(OPTO,1);
 					module_on = true;
 				}
 				if (ticks>TICKS_2) {
 					printf("*************** COMENZAMOS A GRABAR!!! ************\n");
+					//int rec = system("sudo ./recording.sh &");
+					system("sudo ./recording.sh &");
 					state = 1;
+					//setenv("ESTADO", "grabando", 1);
 					cambio = true;
 					gpioWrite(LED,0);
 					pin = false;
-					gpioWrite(OPTO,0);
+					//gpioWrite(OPTO,0); // ¿hay que pagar GSM cuando graba?
 					dur = 0;
 					ticks = 0;
 					blinking = false;
@@ -137,24 +151,30 @@ int main(int argc, char *argv[]) {
 				blink();
 				if (ticks>TICKS_2) {
 					printf("*************** TERMINAMOS DE GRABAR!!!!!!!!!!!! ************\n");
+					//int stop = system("killall arecord");
+					system("killall arecord");
 					state = 2;
 					cambio = true;
 					gpioWrite(LED,1);
 					pin = true;
 					dur = 0;
 					ticks = 0;
-					//blinking = false;
+					blinking = false;
 				}
 			}
 			else if (state==2 && ticks>TICKS_1){
-				printf("*************** RESET !!!!!!!!!!!! ************\n");
-				state = 0;
-				cambio = true;
-				gpioWrite(LED,0);
-				pin = false;
-				dur = 0;
-				ticks = 0;
-				blinking = false;
+				blink();
+				if (ticks>TICKS_2) {
+					printf("*************** SHUTDOWN !!!!!!!!!!!! ************\n");
+					state = 0;
+					cambio = true;
+					gpioWrite(LED,0);
+					pin = false;
+					dur = 0;
+					ticks = 0;
+					blinking = false;
+					exit(0);
+				}
 			}
 			dur++;
 			//printf("dur %d state %d %d\n",dur,state,pin);
