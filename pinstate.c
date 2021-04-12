@@ -5,9 +5,10 @@
 #include <stdbool.h>
 #include <pigpio.h>
 
-#define PULSE 6
-#define LED 5
-#define OPTO 22
+#define PULSE 5 
+#define LED 6
+#define OPTO 25
+#define LED_SWITCH 16
 
 #define TICKS_1 5
 #define TICKS_2 7

@@ -2,6 +2,7 @@
 import os
 import serial
 import time
+from datetime import datetime
 import yaml
 
 #Enable Serial Communication
@@ -12,7 +13,7 @@ port = serial.Serial('/dev/ttyUSB0',
 					stopbits=1, 
 					timeout=1)
 
-with open('/home/pi/acoustic_field/config/defaults.yaml') as file:
+with open('/home/pi/sentinel/configs/options.yaml') as file:
 	opt = yaml.load(file, Loader=yaml.FullLoader)
 
 def wrPort(command, nread=100, sleep=0.5):	
@@ -20,8 +21,8 @@ def wrPort(command, nread=100, sleep=0.5):
 	time.sleep(0.5)
 	port.flush()
 	time.sleep(sleep)
-	#Espera a que devuelva algo el módulo y lee (depende de la función)
-	#Leo 100 bytes más del largo del mensaje original (quizás es medio exagerado que sean 100)
+	#Espera a que devuelva algo el modulo y lee (depende de la funcion)
+	#Leo 100 bytes mas del largo del mensaje original (quizas es medio exagerado que sean 100)
 	rcv = port.read(len(command)+nread)
 	time.sleep(0.5)
 	port.flush()
@@ -60,7 +61,7 @@ def termHTTP():
 	return 'HTTP service terminated'
 
 def sendData(url, data):
-	#saqué el último caracter de "data" porque era un salto de linea y daba problemas. CHEQUEAR
+	#saque el ultimo caracter de "data" porque era un salto de linea y daba problemas. CHEQUEAR
 	wrPort('AT+HTTPPARA="URL","'+url+data[:-1]+'"')
 	time.sleep(1)
 	AT = wrPort('AT+HTTPACTION=0', sleep=10)
@@ -130,7 +131,7 @@ def main():
 		else:
 			raise AssertionError('No response from Module')
 
-	with open('/home/pi/options.yaml', 'w') as file:	    
+	with open('/home/pi/sentinel/configs/options.yaml', 'w') as file:	    
 	    yaml.dump(opt,file)
 
 if __name__ == "__main__":
