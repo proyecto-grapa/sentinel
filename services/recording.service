@@ -15,4 +15,4 @@ ExecStart=/home/pi/sentinel/recording.sh
 
 [Install]
 WantedBy=multi-user.target
-Alias=recording.service
+#Alias=recording.service

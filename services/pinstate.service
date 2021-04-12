@@ -15,4 +15,4 @@ ExecStart=pinstate
 
 [Install]
 WantedBy=multi-user.target
-Alias=pinstate.service
+#Alias=pinstate.service

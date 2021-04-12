@@ -15,4 +15,4 @@ ExecStart=/home/pi/sentinel/watch_process.sh
 
 [Install]
 WantedBy=multi-user.target
-Alias=watch_process.service
+#Alias=watch_process.service
