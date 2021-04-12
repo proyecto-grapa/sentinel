@@ -66,14 +66,14 @@ pinstate:
 ###    chmod +x /home/pi/sentinel/
 ###    
 
-###    # Crear la carpeta /home/pi/Recordings
-###    sudo mkdir /Recordings
 
 ###    # Testeo
 ###    # Probar si anda recordings con 
 ###    ./recording.sh
-###    
+
 servicios:
+	# Crear la carpeta /Recordings
+	sudo mkdir /Recordings
 	sudo cp services/*.service /etc/systemd/system/
 	sudo systemctl enable watch_process.service
 	sudo systemctl enable pinstate.service
