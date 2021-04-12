@@ -1,0 +1,18 @@
+[Unit]
+Description=Recording service
+#Requires=recording.socket
+#Documentation=https://www.github.com/lifofernandez/sentinel
+
+[Service]
+#Type=notify
+ExecStart=/home/pi/sentinel/recording.sh
+#StandardOutput=null
+#Restart=on-failure
+
+# Increase the default a bit in order to allow many simultaneous
+# files to be monitored, we might need a lot of fds.
+#LimitNOFILE=16384
+
+[Install]
+WantedBy=multi-user.target
+Alias=recording.service

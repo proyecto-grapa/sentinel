@@ -1,0 +1,18 @@
+[Unit]
+Description=Wathc Process service
+#Requires=watch_process.socket
+#Documentation=https://www.github.com/lifofernandez/sentinel
+
+[Service]
+#Type=notify
+ExecStart=/home/pi/sentinel/watch_process.sh
+#StandardOutput=null
+#Restart=on-failure
+
+# Increase the default a bit in order to allow many simultaneous
+# files to be monitored, we might need a lot of fds.
+#LimitNOFILE=16384
+
+[Install]
+WantedBy=multi-user.target
+Alias=watch_process.service

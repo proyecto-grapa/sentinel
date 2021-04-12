@@ -135,7 +135,9 @@ int main(int argc, char *argv[]) {
 				if (ticks>TICKS_2) {
 					printf("*************** COMENZAMOS A GRABAR!!! ************\n");
 					//int rec = system("sudo ./recording.sh &");
-					system("sudo ./recording.sh &");
+					//system("sudo ./recording.sh &");
+					system("systemctl start recording.service");
+					system("systemctl show --property MainPID --value recording.service");
 					state = 1;
 					//setenv("ESTADO", "grabando", 1);
 					cambio = true;
@@ -153,6 +155,7 @@ int main(int argc, char *argv[]) {
 					printf("*************** TERMINAMOS DE GRABAR!!!!!!!!!!!! ************\n");
 					//int stop = system("killall arecord");
 					system("killall arecord");
+					system("systemctl stop recording.service");
 					state = 2;
 					cambio = true;
 					gpioWrite(LED,1);

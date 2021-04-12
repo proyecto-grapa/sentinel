@@ -10,7 +10,8 @@ preparar:
 dependencias:
 	sudo apt install raspberrypi-kernel-headers ladspa-sdk inotify-tools libatlas-base-dev
 	python3 -m pip install --upgrade pip
-	python3 -m pip install scipy pyyaml
+	#sudo python3 -m pip install --upgrade pip
+	sudo python3 -m pip install scipy pyyaml
 	
 # WARNING: The scripts f2py, f2py3 and f2py3.7 are installed in '/home/pi/.local/bin' which is not on PATH.
 # export PATH := /home/pi/.local/bin:$(PATH)
@@ -31,6 +32,7 @@ i2s-audio:
 	cd rpi-i2s-audio
 	make -C /lib/modules/$(VERSION)/build M=$(PWD) modules
 
+
 ###    sudo insmod my_loader.ko
 ###    sudo cp my_loader.ko /lib/modules/$(uname -r)/kernel/drivers/
 ###    
@@ -43,37 +45,52 @@ i2s-audio:
 ###    
 ###    sudo depmod
 ###    sudo reboot
-###    
 ###    # DESPUES DE REBOOT
+
+pinstate:
+	wget https://github.com/joan2937/pigpio/archive/master.zip
+	unzip master.zip
+	cd pigpio-master
+	make
+	sudo make install
+	gcc -Wall -pthread -o pinstate pinstate.c -lpigpio -lrt
+	sudo cp pinstate /usr/bin/
+
+###    
 ###    
 ###    
 ###    # Copiar los scripts que están en la subcarpeta scripts a /home/pi y otorgar
 ###    # permisos de ejecución a los .py y .sh (si hiciera falta)
 ###    
-###    cp -r scripts/ /home/pi/
-###    chmod +x /home/pi/scripts/
+###    #NO estan mas en scripts cp -r scripts/ /home/pi/
+###    chmod +x /home/pi/sentinel/
 ###    
-###    # Testeo
-###    
+
 ###    # Crear la carpeta /home/pi/Recordings
-###    
-###    mkdir Recordings
-###    
+###    sudo mkdir /Recordings
+
+###    # Testeo
 ###    # Probar si anda recordings con 
-###    
 ###    ./recording.sh
 ###    
-###    # Deberia empezar a grabar tramos de 60 segundos de PCM en Recordings (cortarlo con crtl+C)
-###    
+servicios:
+	sudo cp services/*.service /etc/systemd/system/
+	sudo systemctl enable watch_process.service
+	sudo systemctl enable pinstate.service
+
+###    # Deberia empezar a grabar tramos de 60 segundos
+###    # de PCM en Recordings
+###    # (cortarlo con crtl+C o killall arecord)  
+
 ###    # Probar el watch_process
-###    
-###    # Arrancar recording en background
-###    # Y luego
+###    # Y luego arrancar recording en background
 ###    ./watch_process.sh
-###    
+
+
 ###    # # Acoustic field
 ###    # git clone https://www.github.com/meguia/acoustic_field
 ###    # # Y después para actualizar
 ###    # cd acoustic_field
 ###    # git fetch --all
 ###    # git pull origin
+
