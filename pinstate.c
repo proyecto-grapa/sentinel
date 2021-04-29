@@ -127,11 +127,10 @@ int main(int argc, char *argv[]) {
 					system("systemctl start recording.service");
 					system("systemctl show --property MainPID --value recording.service");
 					state = 1;
-					//setenv("ESTADO", "grabando", 1);
 					cambio = true;
 					gpioWrite(LED,0);
 					pin = false;
-					//gpioWrite(OPTO,0); // ¿hay que apagar el modulo GSM al grabar?
+					gpioWrite(OPTO,0); // ¿hay que apagar el modulo GSM al grabar?
 					dur = 0;
 					ticks = 0;
 					blinking = false;
@@ -144,13 +143,13 @@ int main(int argc, char *argv[]) {
 					//int stop = system("killall arecord");
 					system("killall arecord");
 					system("systemctl stop recording.service");
-					gpioWrite(LED,0);
-					state = 0;
+					//state = 0;
 					cambio = true;
-					pin = true;
+					pin = false;
 					dur = 0;
 					ticks = 0;
 					blinking = false;
+					gpioWrite(LED,0);
 					system("sleep 3");
 					system("poweroff");
 				}
