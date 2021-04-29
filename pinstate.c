@@ -5,10 +5,9 @@
 #include <stdbool.h>
 #include <pigpio.h>
 
-#define PULSE 5 
-#define LED 6
-#define OPTO 25
-#define LED_SWITCH 16
+#define PULSE 6
+#define LED 5
+#define OPTO 22
 
 #define TICKS_1 5
 #define TICKS_2 7
@@ -97,20 +96,9 @@ int main(int argc, char *argv[]) {
 	gpioSetAlertFunc(PULSE, event);
 	gpioGlitchFilter(PULSE, debounce);	
 
-	/* SYSTEM ENV VARS */
-	//char *estado;
-        //estado = getenv("ESTADO");	
-	//if (estado == NULL){
-	//	fprintf(stderr, "Error eding ESTADO env. var.\n");
-	//	return 1;
-	//}
-	//if(setenv("ESTADO", "APAGADO", 1)<0){
-	//	fprintf(stderr, "Error setting env. var.\n");
-	//	return 1;
-	//}
 
 	state = 0;
-	puts("HOLA");
+	//puts("HOLA");
 	gpioWrite(LED,1);
 	pin = true;
 	module_on = false;
@@ -136,7 +124,6 @@ int main(int argc, char *argv[]) {
 				if (ticks>TICKS_2) {
 					printf("*************** COMENZAMOS A GRABAR!!! ************\n");
 					//int rec = system("sudo ./recording.sh &");
-					//system("sudo ./recording.sh &");
 					system("systemctl start recording.service");
 					system("systemctl show --property MainPID --value recording.service");
 					state = 1;
@@ -157,6 +144,8 @@ int main(int argc, char *argv[]) {
 					//int stop = system("killall arecord");
 					system("killall arecord");
 					system("systemctl stop recording.service");
+					system("sleep 3");
+					system("poweroff");
 					state = 2;
 					cambio = true;
 					gpioWrite(LED,1);
