@@ -140,35 +140,35 @@ int main(int argc, char *argv[]) {
 			else if (state==1 && ticks>TICKS_1){
 				blink();
 				if (ticks>TICKS_2) {
-					printf("*************** TERMINAMOS DE GRABAR!!!!!!!!!!!! ************\n");
+					printf("*************** TERMINAMOS DE GRABAR & POWEROFF ************\n");
 					//int stop = system("killall arecord");
 					system("killall arecord");
 					system("systemctl stop recording.service");
-					system("sleep 3");
-					system("poweroff");
-					state = 2;
+					gpioWrite(LED,0);
+					state = 0;
 					cambio = true;
-					gpioWrite(LED,1);
 					pin = true;
 					dur = 0;
 					ticks = 0;
 					blinking = false;
+					system("sleep 3");
+					system("poweroff");
 				}
 			}
-			else if (state==2 && ticks>TICKS_1){
-				blink();
-				if (ticks>TICKS_2) {
-					printf("*************** SHUTDOWN !!!!!!!!!!!! ************\n");
-					state = 0;
-					cambio = true;
-					gpioWrite(LED,0);
-					pin = false;
-					dur = 0;
-					ticks = 0;
-					blinking = false;
-					exit(0);
-				}
-			}
+			//else if (state==2 && ticks>TICKS_1){
+			//	blink();
+			//	if (ticks>TICKS_2) {
+			//		printf("*************** SHUTDOWN !!!!!!!!!!!! ************\n");
+			//		state = 0;
+			//		cambio = true;
+			//		gpioWrite(LED,0);
+			//		pin = false;
+			//		dur = 0;
+			//		ticks = 0;
+			//		blinking = false;
+			//		exit(0);
+			//	}
+			//}
 			dur++;
 			//printf("dur %d state %d %d\n",dur,state,pin);
 		}
