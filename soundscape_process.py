@@ -4,8 +4,10 @@ import yaml
 import requests
 import argparse
 import numpy as np
-import acoustic_field.soundscape as sc
 from datetime import datetime, timedelta
+
+sys.path.append('/home/pi/')
+import acoustic_field.soundscape as sc
 
 now = datetime.now()
 
@@ -18,7 +20,7 @@ parser.set_defaults(send=True)
 #parser.add_argument('-send', type=bool, default=True, help="Send to Google Drive")
 args = parser.parse_args()
 
-with open('/home/pi/options.yaml') as file:
+with open('/home/pi/sentinel/configs/options.yaml') as file:
 	opt = yaml.load(file, Loader=yaml.FullLoader)
 
 dump = np.frombuffer(sys.stdin.buffer.read(), dtype='u1', count=-1)
@@ -60,9 +62,9 @@ for k in opt['pkeys']:
 print(par_str)
 
 # send to google drive
-if args.send:
-	req = requests.get(opt['request_url'] + '?' + par_str)
-	print(req)
+#if args.send:
+#	req = requests.get(opt['URL'] + '?' + par_str)
+#	print(req)
 
 #write to logfile
 with open(opt['logfile'], "a") as fp:
