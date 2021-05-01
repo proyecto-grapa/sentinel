@@ -5,9 +5,9 @@
 #include <stdbool.h>
 #include <pigpio.h>
 
-#define PULSE 6
-#define LED 5
-#define OPTO 22
+#define PULSE 5
+#define LED 6
+#define OPTO 25
 
 #define TICKS_1 5
 #define TICKS_2 7
@@ -81,6 +81,7 @@ void event(int gpio, int level, uint32_t tick){
 int main(int argc, char *argv[]) {
 	int usecs = 100000;
 	int debounce = 20000;
+	puts("INIT");
 
 	gpioCfgClock(5, 0, 0); /* Dont use PCM!*/
    	if (gpioInitialise() < 0) {
@@ -98,11 +99,11 @@ int main(int argc, char *argv[]) {
 
 
 	state = 0;
-	//puts("HOLA");
+	puts("HOLA");
 	gpioWrite(LED,1);
 	pin = true;
 	module_on = false;
-	gpioWrite(OPTO,0); // ¿hay que apagar modulo GSM en el init?
+	gpioWrite(OPTO,0); 
 	
 	/* LOOP */
 	while(1) 
