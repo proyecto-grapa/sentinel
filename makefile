@@ -26,6 +26,9 @@ i2s:
 	sudo cp /boot/config.txt /boot/config-bk.txt
 	sudo cp configs/boot/config.txt /boot/config.txt
 
+asound:
+	sudo cp configs/etc/asound.conf /etc/asound.conf
+
 VERSION = $(shell uname -r)
 PWD = $(shell pwd)'/rpi-i2s-audio'
 i2s-audio:
