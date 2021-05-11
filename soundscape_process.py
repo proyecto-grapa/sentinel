@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import sys
+import os
 import yaml
 import requests
 import argparse
@@ -10,23 +11,28 @@ sys.path.append('/home/pi/')
 import acoustic_field.soundscape as sc
 
 now = datetime.now()
-
+hostname = os.uname().nodename
 parser = argparse.ArgumentParser()
 
 send_parser = parser.add_mutually_exclusive_group(required=False)
 send_parser.add_argument('--send', dest='send', action='store_true')
 send_parser.add_argument('--no-send', dest='send', action='store_false')
 parser.set_defaults(send=True)
-#parser.add_argument('-send', type=bool, default=True, help="Send to Google Drive")
+parser.add_argument('--date', dest='date',type=str, default='now', help="use date from filename or datetime now (default)")
 args = parser.parse_args()
 
 with open('/home/pi/sentinel/configs/options.yaml') as file:
 	opt = yaml.load(file, Loader=yaml.FullLoader)
 
+if (args.date == 'now'):
+	tlast = now
+else:
+	dn=[int(s) for s in args.date.split('/')[-1].split('.')[0].split('_')]
+	tlast = datetime(dn[0],dn[1],dn[2],dn[3],dn[4],dn[5])
+
 dump = np.frombuffer(sys.stdin.buffer.read(), dtype='u1', count=-1)
 nsamples=dump.shape[0]//(opt['nchan']*opt['nbytes'])
 nmax = 2**(opt['nbytes']*8-1)
-print(nsamples)
 if opt['nbytes']==4:
 	data=np.reshape(dump.view(np.int32)/nmax,(nsamples,opt['nchan'])).astype('float64') 
 elif opt['nbytes']==2:
@@ -53,8 +59,7 @@ par['Indices']['number_of_windows'] = int(np.floor((NOWF-HW)/HW))
 ind = sc.indices(spec,**par['Indices'])
 dur = ind['nsamples']/par['sr']
 indt = dur - ind['t']
-tlist = [now - timedelta(seconds=t.item()) for t in indt]
-
+tlist = [tlast - timedelta(seconds=t.item()) for t in indt]
 # write to stdout
 par_str = 'time=' + ",".join([t.strftime("%Y-%m-%dT%H:%M:%SZ") for t in tlist])
 for k in opt['pkeys']:
@@ -67,7 +72,8 @@ print(par_str)
 #	print(req)
 
 #write to logfile
-with open(opt['logfile'], "a") as fp:
+logfile_name = opt['logfile'] + hostname + '_' + opt['sesion'] + '.csv'
+with open(logfile_name, "a") as fp:
 	for n,t in enumerate(tlist):
 		csvline = t.strftime("%Y-%m-%dT%H:%M:%SZ") + ","
 		csvline += ",".join([str(np.around(ind[k][0,n],decimals=3)) for k in opt['pkeys']]) + "\n"
