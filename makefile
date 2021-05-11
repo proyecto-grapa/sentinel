@@ -26,15 +26,21 @@ i2s:
 	sudo cp /boot/config.txt /boot/config-bk.txt
 	sudo cp configs/boot/config.txt /boot/config.txt
 
+asound:
+	sudo cp configs/etc/asound.conf /etc/asound.conf
+
+###	esto es para makefile no correr en linea de comandos
 VERSION = $(shell uname -r)
 PWD = $(shell pwd)'/rpi-i2s-audio'
 i2s-audio:
 	cd rpi-i2s-audio
 	make -C /lib/modules/$(VERSION)/build M=$(PWD) modules
 
-
-###    sudo insmod my_loader.ko
-###    sudo cp my_loader.ko /lib/modules/$(uname -r)/kernel/drivers/
+###	En linea de comandos desde sentinel/
+###	cd rpi-i2s-audio
+###	make -C /lib/modules/$(uname -r)/build M=$(pwd)/rpi-i2s-audio modules
+###     sudo insmod my_loader.ko
+###    	sudo cp my_loader.ko /lib/modules/$(uname -r)/kernel/drivers/
 ###    
 ###    # Agregar my_loader en una nueva linea en /etc/modules
 ###    # /etc/modules: kernel modules to load at boot time.
