@@ -2,18 +2,20 @@
 import os
 import serial
 import time
-from datetime import datetime
 import yaml
+from datetime import datetime
 
 #Enable Serial Communication
 port = serial.Serial('/dev/ttyUSB0', 
-					baudrate=115200, 
-					bytesize=8, 
-					parity='N',
-					stopbits=1, 
-					timeout=1)
+ 					baudrate=115200, 
+ 					bytesize=8, 
+ 					parity='N',
+ 					stopbits=1, 
+ 					timeout=1)
+
 
 with open('/home/pi/sentinel/configs/options.yaml') as file:
+	global opt
 	opt = yaml.load(file, Loader=yaml.FullLoader)
 
 def wrPort(command, nread=100, sleep=0.5):	
@@ -21,8 +23,8 @@ def wrPort(command, nread=100, sleep=0.5):
 	time.sleep(0.5)
 	port.flush()
 	time.sleep(sleep)
-	#Espera a que devuelva algo el modulo y lee (depende de la funcion)
-	#Leo 100 bytes mas del largo del mensaje original (quizas es medio exagerado que sean 100)
+	#Espera a que devuelva algo el módulo y lee (depende de la función)
+	#Leo 100 bytes más del largo del mensaje original (quizás es medio exagerado que sean 100)
 	rcv = port.read(len(command)+nread)
 	time.sleep(0.5)
 	port.flush()
@@ -33,7 +35,7 @@ def wrPort(command, nread=100, sleep=0.5):
 def isOn():
 	AT = wrPort('AT')
 	wrPort('AT+CFUN=1')
-	wrPort('AT+CGATT=1')
+	wrPort('AT+CGATT=1')	#Da error solo si AT+CREG != 0,1
 	return 'OK' in AT
 
 def checkSignal():
@@ -42,7 +44,8 @@ def checkSignal():
 
 def connectAPN(APN):
 	wrPort('AT+SAPBR=3,1,"APN",'+APN)
-	AT = wrPort('AT+SAPBR=1,1')	
+	AT = wrPort('AT+SAPBR=1,1')
+	time.sleep(5)
 	return 'OK' in AT
 
 def checkIP():
@@ -61,8 +64,10 @@ def termHTTP():
 	return 'HTTP service terminated'
 
 def sendData(url, data):
-	#saque el ultimo caracter de "data" porque era un salto de linea y daba problemas. CHEQUEAR
-	wrPort('AT+HTTPPARA="URL","'+url+data[:-1]+'"')
+	#saqué el último caracter de "data" porque era un salto de linea y daba problemas. CHEQUEAR
+	if data.endswith('\n'):
+		data=data[:-1]
+	wrPort('AT+HTTPPARA="URL","'+url+data+'"')
 	time.sleep(1)
 	AT = wrPort('AT+HTTPACTION=0', sleep=10)
 	upload = '0,302' in AT
@@ -73,6 +78,7 @@ def uploadQueue(url, queue, offset):
 	file=open(queue, mode='r+')
 	file.seek(offset)
 	line = file.readline()
+	upload = False
 	#Hecho con while porque con for me daba problemas la funcion "next()" de tell()
 	while line:
 		upload, AT = sendData(url, line)
@@ -101,38 +107,40 @@ def shutDown():
 
 def main():
 	cont = 0
-	offset = opt['offset']
-	APN = opt['APN']
-	URL = opt['URL']
-	queue = opt['queue']
-	inicio = datetime.now()
+	offset_file = opt['GSM']['offset_file']
+        with open(offset_file) as fp:
+            global offset
+            offset = int(fp.readline())
+	apn = opt['GSM']['apn']
+	url = opt['GSM']['url']
+	queue = opt['GSM']['queue']
+	timeout = time.time() + opt['GSM']['timeout']
 	#chequear que no este corriendo otro gsm_send
-	while (datetime.now() - inicio) < opt['timeout']:
-
+	while timeout > time.time():
 		if isOn():
 			if checkSignal():	#if 0,1 -> True
-				if connectAPN(APN) or checkIP():
+				conectOK = connectAPN(apn)
+				if conectOK or checkIP():
 					initHTTP()
-					while checkIP():
-						offset,success = uploadQueue(URL, queue, offset)
-						opt['offset'] = offset
+					while checkIP() and timeout > time.time(): #or timeout
+						offset,success = uploadQueue(url, queue, offset)    
 						time.sleep(5)
 				else:
-					print('I have signal but can\'t connect to Internet')
+					print('I have signal but can\'t connect to the Internet')
 
 			else:
 				print('No signal. Reconnecting')
 				time.sleep(1)
 
-			if cont==10:
-				restartModule()
+			#if cont==10:
+			#	restartModule()
 
 			cont += 1
 		else:
 			raise AssertionError('No response from Module')
 
-	with open('/home/pi/sentinel/configs/options.yaml', 'w') as file:	    
-	    yaml.dump(opt,file)
+	with open(offset_file, 'w') as fp:
+            fp.write(offset)
 
 if __name__ == "__main__":
 	try:

@@ -14,10 +14,6 @@ now = datetime.now()
 hostname = os.uname().nodename
 parser = argparse.ArgumentParser()
 
-send_parser = parser.add_mutually_exclusive_group(required=False)
-send_parser.add_argument('--send', dest='send', action='store_true')
-send_parser.add_argument('--no-send', dest='send', action='store_false')
-parser.set_defaults(send=True)
 parser.add_argument('--date', dest='date',type=str, default='now', help="use date from filename or datetime now (default)")
 args = parser.parse_args()
 
@@ -65,11 +61,8 @@ par_str = 'time=' + ",".join([t.strftime("%Y-%m-%dT%H:%M:%SZ") for t in tlist])
 for k in opt['pkeys']:
 	par_str += '&' + k.upper() + '=' + ",".join([str(np.around(s,decimals=3)) for s in ind[k][0,:]]) 
 print(par_str)
-
-# send to google drive
-#if args.send:
-#	req = requests.get(opt['URL'] + '?' + par_str)
-#	print(req)
+with open(opt['queue', "a") as fp:
+    fp.write(par_str)
 
 #write to logfile
 logfile_name = opt['logfile'] + hostname + '_' + opt['sesion'] + '.csv'
@@ -78,4 +71,3 @@ with open(logfile_name, "a") as fp:
 		csvline = t.strftime("%Y-%m-%dT%H:%M:%SZ") + ","
 		csvline += ",".join([str(np.around(ind[k][0,n],decimals=3)) for k in opt['pkeys']]) + "\n"
 		fp.write(csvline)	
-fp.close() 

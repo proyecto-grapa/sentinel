@@ -1,0 +1,1 @@
+cmd_/home/pi/sentinel/rpi-i2s-audio/my_loader.ko := ld -r  -EL  --build-id=sha1  -T scripts/module.lds -o /home/pi/sentinel/rpi-i2s-audio/my_loader.ko /home/pi/sentinel/rpi-i2s-audio/my_loader.o /home/pi/sentinel/rpi-i2s-audio/my_loader.mod.o;  true
