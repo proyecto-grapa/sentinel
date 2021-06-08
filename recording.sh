@@ -1,6 +1,6 @@
 #!/bin/bash
 PREFIX=${1:-rec}
-DUR=${2:-60}
+DUR=${2:-120}
 FOLDER=${3:-Recordings/}
 BLOCK=$(( DUR * 384000 ))
 FILENAME='/'$FOLDER$PREFIX$(date +'_%Y_%m_%d_%H_%M_')

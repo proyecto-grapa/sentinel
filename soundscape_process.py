@@ -46,7 +46,7 @@ if par['hipass']:
 
 spec = sc.spectrogram(data[:,0],**par['Spectrogram'])
 # recalculate values of windows based on the number of samples 
-HW = int(np.floor(par['Indices']['window']*par['sr']/(2*par['windowSize'])))
+HW = int(np.floor(par['Indices']['window']*par['sr']/(par['windowSize'])))
 par['Indices']['half_window'] = HW
 NOWF = int(np.floor(spec['nsamples'] / par['windowSize']))
 par['Indices']['number_of_windows'] = int(np.floor((NOWF-HW)/HW))
@@ -61,8 +61,8 @@ par_str = 'time=' + ",".join([t.strftime("%Y-%m-%dT%H:%M:%SZ") for t in tlist])
 for k in opt['pkeys']:
 	par_str += '&' + k.upper() + '=' + ",".join([str(np.around(s,decimals=3)) for s in ind[k][0,:]]) 
 print(par_str)
-with open(opt['queue', "a") as fp:
-    fp.write(par_str)
+with open(opt['GSM']['queue'], "a") as fp:
+    fp.write(par_str + '\n')
 
 #write to logfile
 logfile_name = opt['logfile'] + hostname + '_' + opt['sesion'] + '.csv'
