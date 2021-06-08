@@ -6,17 +6,14 @@ import yaml
 from datetime import datetime
 
 #Enable Serial Communication
-# port = serial.Serial('/dev/ttyUSB0', 
-# 					baudrate=115200, 
-# 					bytesize=8, 
-# 					parity='N',
-# 					stopbits=1, 
-# 					timeout=1)
+port = serial.Serial('/dev/ttyUSB0', 
+					baudrate=115200, 
+					bytesize=8, 
+					parity='N',
+					stopbits=1, 
+					timeout=3)
 
-port = serial.Serial('COM11', baudrate=115200, timeout=1)
-
-#with open('/home/pi/sentinel/configs/options.yaml') as file:
-with open(os.path.join(os.getcwd(), 'options.yaml')) as file:
+with open('/home/pi/sentinel/configs/options.yaml') as file:
 	global opt
 	opt = yaml.load(file, Loader=yaml.FullLoader)
 
@@ -24,43 +21,88 @@ def fileChanged(lastupload, queue):
 	newTime = os.path.getmtime(queue)
 	return newTime != lastupload
 
-def timeout(sec=60):
-	to = time.time() + sec
-	return to > time.time()
-
 def wrPort(command, nread=100, sleep=0.5):	
 	port.write(str.encode(command+'\r\n'))
-	time.sleep(0.5)
+	time.sleep(0.5+sleep)
 	port.flush()
-	time.sleep(sleep)
-	#Espera a que devuelva algo el módulo y lee (depende de la función)
-	#Leo 100 bytes más del largo del mensaje original (quizás es medio exagerado que sean 100)
 	rcv = port.read(len(command)+nread)
 	time.sleep(0.5)
-	port.flush()
-	rcv= rcv.decode('utf-8')
-	print(rcv)
+	try:
+		rcv=rcv.decode('utf-8')
+		print("rcv:",rcv)
+		time.sleep(0.1)
+	except UnicodeDecodeError:
+		time.sleep(0.1)
+		print('UnicodeDecodeError', rcv)
+		port.flushInput()
+		port.flushOutput()
+		rcv=""
 	return rcv
 
-def slowRead(command, expectedString, nread=100, sec=60):
+def slowRead(command, expectedStringOK='OK', expectedStringERROR='ERROR', nread=100, sec=60):
 	port.write(str.encode(command+'\r\n'))
-	time.sleep(0.5)
+	time.sleep(1)
 	port.flush()
 	rcv=""
-	while timeout(sec):
+	to = time.time() + sec
+	while to > time.time():
 		rcvTest = port.read(nread)
-		time.sleep(0.5)
-		rcvTest=rcvTest.decode('utf-8')
-		print("rcvTest:",rcvTest)
+		time.sleep(1)
+		try:
+			rcvTest=rcvTest.decode('utf-8')
+			print("rcvTest:",rcvTest)
+			time.sleep(0.5)
+		except UnicodeDecodeError:
+			time.sleep(0.5)
+			print('UnicodeDecodeError', rcvTest)
+			port.flushInput()
+			port.flushOutput()
+			rcvTest=""
 		if rcvTest:
 			rcv=rcvTest
-			if expectedString in rcv:
+			if expectedStringOK in rcv:
 				return True, rcv
+			elif expectedStringERROR in rcv:
+				return False, rcv
+		time.sleep(0.5)
+	return False, rcv
+
+def slowWrite(command, expectedStringOK='OK', expectedStringERROR='ERROR', nread=100, sec=60)
+	nparts=80
+	parts = [command[i:i+nparts] for i in range(0, len(command), nparts)]
+	for part in parts:
+		print('Input chunk:' part)
+		port.write(str.encode(part))
+		time.sleep(0.5)
+	port.write(str.encode('\r\n'))
+	time.sleep(1)
+	port.flush()
+	rcv=""
+	to = time.time() + sec
+	while to > time.time():
+		rcvTest = port.read(nread)
+		time.sleep(1)
+		try:
+			rcvTest=rcvTest.decode('utf-8')
+			print("rcvTest:",rcvTest)
+			time.sleep(0.5)
+		except UnicodeDecodeError:
+			time.sleep(0.5)
+			print('UnicodeDecodeError', rcvTest)
+			port.flushInput()
+			port.flushOutput()
+			rcvTest=""
+		if rcvTest:
+			rcv=rcvTest
+			if expectedStringOK in rcv:
+				return True, rcv
+			elif expectedStringERROR in rcv:
+				return False, rcv
 		time.sleep(0.5)
 	return False, rcv
 
 def isOn(sec=60):
-	on, AT = slowRead("AT", 'OK')
+	on, AT = slowRead("AT")
 	print(AT)
 	return on, AT
 
@@ -69,13 +111,16 @@ def checkSignal():
 	return '0,1' in AT
 
 def connectAPN(APN):
-	wrPort('AT+SAPBR=3,1,"APN",'+APN)
-	AT = wrPort('AT+SAPBR=1,1')
-	time.sleep(5)
-	return 'OK' in AT
+	okApn,atApn = slowRead('AT+SAPBR=3,1,"APN",'+APN)
+	if not okApn:
+		print("APN config failed: "+atApn)
+		return okApn
+	okConn, atConn = slowRead('AT+SAPBR=1,1')
+	return okConn
 
 def checkIP():
 	AT = wrPort('AT+SAPBR=2,1')
+	#comparar string vacia
 	return '"0.0.0.0"' not in AT	
 
 def initHTTP():
@@ -86,18 +131,24 @@ def initHTTP():
 	return 'HTTP config OK'
 
 def termHTTP():
-	wrPort('AT+HTTPTERM')
+	time.sleep(0.5)
+	port.flushInput()
+	time.sleep(0.5)
+	slowRead('AT+HTTPTERM')
 	return 'HTTP service terminated'
 
 def sendData(url, data):
+	upload=False
 	if data.endswith('\n'):
 		data=data[:-1]
-	wrPort('AT+HTTPPARA="URL","'+url+data+'"')
-	time.sleep(1)
-	#AT = wrPort('AT+HTTPACTION=0', sleep=10)
-	#upload = '0,302' in AT
-	#return upload, AT
-	upload, AT = slowRead('AT+HTTPACTION=0','0,302')
+	print("Uploading: "+data+'\n')
+	time.sleep(0.5)
+	okUrl, AT=slowWrite('AT+HTTPPARA="URL","'+url+data+'"', sec=30)
+	time.sleep(0.5)
+	if okUrl:	
+		upload, AT = slowRead('AT+HTTPACTION=0','0,302')
+	else:
+		print("HTTPPARA failed")
 	return upload, AT
 
 
@@ -108,8 +159,8 @@ def uploadQueue(url, queue, offset):
 	upload = False
 	while line:
 		upload, AT = sendData(url, line)
-		print(f'upload: {upload}')
-		print('Esto guardé en AT:\n'+AT, 'Fin de AT')
+		print('upload:',upload)
+		print('Saved in AT:\n'+AT, 'End of AT')
 		if upload:
 			offset=file.tell()
 		else:
@@ -132,17 +183,23 @@ def shutDown():
 
 def main():
 
-	#offset_file = opt['GSM']['offset_file']
-	#with open(offset_file) as fp:
-	#	global offset
-	#	offset = int(fp.readline())
-	with open(os.path.join(os.getcwd(), 'offset.tmp')) as file:
-		global offset
-		offset = int(file.readline())
+	offset_file = opt['GSM']['offset_file']
+	global offset
+	if os.path.isfile(offset_file):
+		with open(offset_file) as fp:			
+			offset = int(fp.readline())
+	else:
+		with open(offset_file, 'w') as file:
+			offset = 0
+			file.write(str(offset))
+
+	queue = opt['GSM']['queue']
+	if not os.path.isfile(queue):
+		open(queue,'w').close()
+
 	apn = opt['GSM']['apn']
 	url = opt['GSM']['url']
-	queue = opt['GSM']['queue']
-	#timeout = time.time() + opt['GSM']['timeout']
+	
 	lastupload = 0
 	while True:
 		if isOn():
@@ -150,31 +207,30 @@ def main():
 				connectAPN(apn)
 				if checkIP():
 					initHTTP()
-
-					while checkIP():
+					while isOn() and checkIP():
 						if fileChanged(lastupload, queue):
 							print('Uploading')
 							offset,success = uploadQueue(url, queue, offset)
 							lastupload = os.path.getmtime(queue)
+							if not success:
+								termHTTP()
+								initHTTP()
+								success=True
 						else:
 							print("File hasn't changed")
 							time.sleep(60)
 
-					#with open(offset_file, 'w') as file:
-					with open(os.path.join(os.getcwd(), 'offset.tmp'), 'w') as file:	    
+					termHTTP()
+					with open(offset_file, 'w') as file:					
 						file.write(str(offset))
 				else:
-					print('I have signal but can\'t connect to the Internet')
-				termHTTP()
-
+					print('I have signal but can\'t connect to the Internet')			
 			else:
 				print('No signal. Reconnecting')
-				time.sleep(1)
-
+				#Aca va gsm_startup	
 		else:
 			raise AssertionError('No response from Module')
 	
-
 if __name__ == "__main__":
 	try:
 		main()

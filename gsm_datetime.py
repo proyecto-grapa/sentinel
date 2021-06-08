@@ -4,7 +4,7 @@ import serial
 import time
 from datetime import datetime,timedelta
 
-#import subprocess
+import subprocess
 
 #Enable Serial Communication
 port = serial.Serial('/dev/ttyUSB0', 
@@ -25,23 +25,26 @@ def wrPort(command, nread=100):
 	rcv = port.read(len(command)+nread)
 	port.flush()
 	rcv= rcv.decode('utf-8')
-	#print(rcv)
+	print(rcv)
 	return rcv
 
 def checkTime():
 	return wrPort("AT+CCLK?")
 
 def main():
+	wrPort('AT')
+	time.sleep(0.5)
 	gsmTime = checkTime()
+
 	dateStr = gsmTime = gsmTime.split('"')[1]
 	gmtOffset= timedelta(hours=int(dateStr[-3:])/4) #Te lo mide en cuartos de hora
 	dt = datetime.strptime(dateStr[:-3],"%y/%m/%d,%H:%M:%S") 
-	dt = dt + gmtOffset
+	#Para utilizar UTC:
+	#dt = dt + gmtOffset
 	print('Date and time (UTC): ' + dt.strftime('%Y/%m/%d %H:%M:%S'))
+	subprocess.call(['sudo date -s '+'"'+dt.strftime('%Y/%m/%d %H:%M:%S')+'"'], shell=True)
 
-	#subprocess.call(['sudo', 'date', '-s', '{:}'.format(dt.strftime('%Y/%m/%d %H:%M:%S'))], shell=True)
-
-
+	port.close()
 if __name__ == "__main__":
 	try:
 		main()
