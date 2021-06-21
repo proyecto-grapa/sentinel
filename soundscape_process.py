@@ -45,8 +45,8 @@ if par['hipass']:
 	data[:,0] = soundscape.hipass_filter(data[:,0],**par['Filtering'])
 
 spec = sc.spectrogram(data[:,0],**par['Spectrogram'])
-# recalculate values of windows based on the number of samples 
-HW = int(np.floor(par['Indices']['window']*par['sr']/(par['windowSize'])))
+# recalculate values of windows based on the number of samples overla 50%
+HW = int(np.floor(par['Indices']['window']*par['sr']/(2*par['windowSize'])))
 par['Indices']['half_window'] = HW
 NOWF = int(np.floor(spec['nsamples'] / par['windowSize']))
 par['Indices']['number_of_windows'] = int(np.floor((NOWF-HW)/HW))
