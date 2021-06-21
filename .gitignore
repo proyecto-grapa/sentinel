@@ -5,3 +5,4 @@ rpi-i2s-audio/my_loader.mod
 rpi-i2s-audio/my_loader.mod.c
 rpi-i2s-audio/my_loader.mod.o
 rpi-i2s-audio/my_loader.o
+.ipynb_checkpoints/soundscape_process_offline-checkpoint.ipynb
